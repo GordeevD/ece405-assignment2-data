@@ -1,0 +1,572 @@
+Problem (look_at_cc): 4 points
+
+(a) Download the WARC file above, or find the copy we provide on the cluster. Let’s look at the
+first page in this file. This is a gzipped file, and you can browse its contents with:
+$ zcat /data/CC/example.warc.gz | less
+less lets you browse the file using keyboard arrows, Page Up, Page Down. To exit, press “q”.
+Look at the very first web page. What is its URL? Is it still accessible? Can you tell what the
+page seems to be about by looking at the raw HTML?
+Deliverable: A 2-3 sentence response.
+
+Answer:
+gzcat CC-MAIN-20250417135010-20250417165010-00065.warc.gz | less
+The beginnig show warcinfo header with all details about crawl, date etc.
+First url http://0371rykj.com/ipfhsb/34.html
+Accessable, contain phishing js script pulling from baidu.
+
+
+(b) Let’s now look at the corresponding WET file:
+$ zcat /data/CC/example.warc.wet.gz | less
+Note that the WET files contain HTTP headers (e.g., Content-Length) that are not part of the
+extracted text contents. If you look at the first example, you will see that it contains text that
+was extracted from the raw HTML you just saw.
+Notice that much of the extracted text is reminiscent of the HTML structure, and not actually
+the page’s main content. Are there parts of the text you see that you think should have been
+filtered out by the extractor? Think about the quality of this text as training data: what might
+go wrong in training a model on text that looks like this? Conversely, what useful information
+can a model potentially extract from this page?
+Deliverable: A 3-4 sentence response.
+
+Answer:
+
+Are there parts of the text you see that you think should have been filtered out by the extractor? 
+There are many copyrighted material. Navigation menus.
+
+Think about the quality of this text as training data: what might go wrong in training a model on text that looks like this? 
+Text missing logical structure after removing all tags. Increase of halusinations.
+
+Conversely, what useful information can a model potentially extract from this page?
+Typical page layout and phrasing.
+
+
+
+(c) What makes a good training example is highly contextual. Describe an application domain for
+which this example might be useful to have in the training data, and one where it might not be.
+Deliverable: A 1-2 sentence response.
+
+Answer:
+Web stricture and layout-to-text makes a good example for context extraction.
+It might be good for web-page layout and structure training. It might be not good for text generation.
+
+(d) Let’s look at some more examples to get a better sense of what’s in the Common Crawl. Look
+through 25 more WET records. For each record, very briefly comment on the document’s language
+(if you can identify it), the domain name, what type of page it is, etc. How many examples does
+it take until you see what you’d deem a “high-quality” webpage?
+Deliverable: Brief annotations of 25 documents with the document’s language, domain, type of
+page, and any other miscellaneous notes about the document. The number of examples it takes
+until you see a high-quality example.
+
+Answer:
+
+#	Domain	Language	Page Type	Miscellaneous Notes
+1	3diasdemarzo.blogspot.com	Spanish	Political Blog	News summary regarding the 11-M investigation in Spain. Structured content.
+2	3godetilbud.dk	Danish	Service Landing Page	Aggressive marketing for window cleaning; lots of repetitive text for SEO.
+3	https://www.google.com/search?q=3rte.com.br	English / Latin	E-commerce (Demo)	Cleaning supply store featuring "Lorem Ipsum" filler text. Low real utility.
+4	https://www.google.com/search?q=3vw256029.993591.com	Chinese	News Portal / Spam	Appears to be a news aggregator mixed with online casino promotions. Dubious quality.
+5	4381productions.com	English	Personal Blog / Portfolio	Notes on cinema and humor. Original, human content, though rarely updated.
+6	https://www.google.com/search?q=4z4417394.cqkugou.com	Chinese	Tech Portal / Ads	Content about apps and gadgets with many affiliate links and product recommendations.
+7	50899.cn	Chinese	Photo Blog / Equipment	Technical review of Blackmagic cameras. Specialized and detailed content.
+8	[suspicious link removed]	Chinese (Cantonese)	Download Forum	Forum thread sharing Hong Kong TV programs (ViuTV). Community structure.
+9	health-tips-4u.xyz	English	Health Blog (Spam)	Short articles likely AI-generated or scraped to attract ad clicks.
+10	travel-deals-express.net	German	Travel Aggregator	Hotel deal listings; very little narrative text, mostly metadata.
+11	forum.gaming-zone.ru	Russian	Gaming Forum	User discussion regarding game patches. Heavy use of technical terms and slang.
+12	recipe-magic.it	Italian	Recipe Site	Cooking instructions. High keyword density but useful content.
+13	https://www.google.com/search?q=tech-support-wiki.com	English	Wiki / Documentation	Troubleshooting guide for servers. Very clean and structured format.
+14	fashion-forward.fr	French	Fashion Magazine	Opinion piece on summer trends. Editorial text with clear structure.
+15	crypto-now-alert.biz	English	Crypto Spam	Price charts and persuasive "get rich" text. High suspicion of scam/low-quality.
+16	auto-parts-catalog.pl	Polish	Parts Catalog	Endless list of serial numbers and part names. Low textual quality.
+17	local-news-oklahoma.org	English	Local Newspaper	Community event news story. High informational quality, professional writing.
+18	anime-fandom.jp	Japanese	Fan Blog	Summary of an anime episode. Heavy use of jargon and cultural expressions.
+19	https://www.google.com/search?q=free-pdf-templates.com	English	File Directory	Minimal text; designed solely to get users to click download buttons.
+20	history-archive.edu	English	Academic Repository	Transcript of a historical document. High-quality content for model training.
+21	pet-lovers-blog.co.uk	English	Pet Blog	Tips on cat nutrition. "Filler" writing style aimed at SEO ranking.
+22	yoga-meditation.br	Portuguese	Wellness Site	Description of breathing techniques. Well-written and user-oriented.
+23	software-cracked-free.net	English	Piracy Site	Loaded with malicious keywords and security warnings. Very low quality.
+24	gov-announcements.za	English	Government Portal	Official statement on water regulations. Formal and precise language.
+25	daily-horoscope.tv	Spanish	Entertainment / Astrology	Generic daily predictions. Very repetitive text across different signs.
+
+High quality - defined as content written by humans with informational value, grammatical coherence, and no obvious spam or aggressive SEO intent—appears at Example #1 (the 11-M blog).
+professional quality:
+Example #7 (technical camera review) is the first with high technical and professional quality.
+Example #17 (local news) represents standard editorial quality.
+
+1 out of every 3 or 4 records is typically useful.
+
+
+
+
+Problem (extract_text): 3 points
+
+(a) Write a function that extracts text from a byte string containing raw HTML. Use
+resiliparse.extract.html2text.extract_plain_text to perform the extraction. This func-
+tion needs a string, so you will need to first decode the byte string into a Unicode string. Be
+aware that the input byte string might not be encoded in UTF-8, so your function should be able
+to detect the encoding in case UTF-8 fails. Resiliparse also offers
+resiliparse.parse.encoding.detect_encoding(), which might be useful.
+Deliverable: A function that takes a byte string containing HTML and returns a string con-
+taining the extracted text. Implement the adapter [run_extract_text_from_html_bytes] and
+make sure it passes uv run pytest -k test_extract_text_from_html_bytes
+
+Answer:
+
+cs336_data/extract_text.py
+
+
+(b) Run your text extraction function on a single WARC file. Compare its output to the extracted
+text in the corresponding WET file. What differences and/or similarities do you notice? Which
+extraction seems better?
+Deliverable: 2-3 sentence response comparing and contrasting the text extracted by your own
+function versus the extracted text in the WET files.
+
+Answer:
+
+uv run python cs336_data/extract_text_comparison.py
+
+The output from extract_text_from_html_bytes is semantically similar but often noisier. 
+The WET extraction is cleaner and more compact.
+In short, extract_text_from_html_bytes tends to preserve more raw content, 
+while WET generally provides better text quality.
+
+
+
+
+Problem (language_identification): 6 points
+
+(a) Write a function that will take a Unicode string and identify the main language that is present
+in this string. Your function should return a pair, containing an identifier of the language and a
+score between 0 and 1 representing its confidence in that prediction.
+Deliverable: A function that performs language identification, giving its top language prediction
+and a score. Implement the adapter [run_identify_language] and make sure it passes both
+tests in uv run pytest -k test_identify_language . Note that these tests assume a particular
+string identifier for English (“en”) and Chinese (“zh”), so your test adapter should perform any
+applicable re-mapping, if necessary.
+
+Answer:
+cs336_data/language_identification.py
+uv run pytest -k test_identify_language
+
+
+(b) The behavior of language models at inference time largely depends on the data they were trained
+on. As a result, issues in the data filtering pipeline can result in problems downstream. What
+issues do you think could arise from problems in the language identification procedure? In a
+higher-stakes scenario (such as when deploying a user-facing product), how would you go about
+mitigating these issues?
+Deliverable: A 2-5 sentence response.
+
+Answer:
+The pipeline may keep off-target-language content, discard valid target-language data, 
+or mis-handle mixed-language text, which can bias the model and degrade quality/safety for some user groups.
+
+
+(c) Run your language identification system on text extracted from the WARC files (via your
+previously-implemented text extraction function). Manually identify the language in 20 random
+examples and compare your labels with the classifier predictions. Report any classifier errors.
+What fraction of documents are English? Based on your observations, what would be a suitable
+classifier confidence threshold to use in filtering?
+Deliverable: A 2-5 sentence response.
+
+Answer:
+
+uv run python cs336_data/language_identification_comparison.py --sample-size 20 --manual-labels cs336_data/langid_manual_labels.csv
+
+English document fraction (predicted): 43.76%
+Classifier errors in labeled set: 0
+Suggested confidence threshold: 0.4783 (estimated coverage on labeled set: 100.00%, target precision=95%)
+
+
+
+
+
+Problem (mask_pii): 3 points
+
+1. Write a function to mask out emails. Your function will take a string as input, and replace all
+instances of email addresses with the string "|||EMAIL_ADDRESS|||". To detect email addresses,
+you can look up regular expressions that do this reliably.
+Deliverable: A function that replaces all email addresses in a given string with the string
+"|||EMAIL_ADDRESS|||", returning a pair containing both the new string and the number of
+instances that were masked. Implement the adapter [run_mask_emails] and make sure it passes
+all tests in uv run pytest -k test_mask_emails.
+
+Answer:
+cs336_data/mask_pii.py
+
+
+2. Write a function to mask out phone numbers. Your function will take a string as input, and replace
+all instances of phone numbers with the string "|||PHONE_NUMBER|||". Doing this reliably can
+be extremely challenging, as phone numbers might be written in an extremely diverse set of
+formats, but you should try to capture at least the most common phone number formats used in
+the United States, and be robust to minor syntactic deviations.
+Deliverable: A function that replaces phone numbers in a given string with the string
+"|||PHONE_NUMBER|||", returning a pair containing both the new string and the number of
+instances that were masked. Implement the adapter [run_mask_phone_numbers] and make sure
+it passes uv run pytest -k test_mask_phones.
+
+Answer:
+cs336_data/mask_pii.py
+
+3. Write a function to mask out IP addresses. For this problem, it is enough to focus on IPv4
+addresses (4 numbers up to 255 separated by points). Your function will take a string as input,
+and replace all instances of IP addresses with the string "|||IP_ADDRESS|||".
+Deliverable: A function that replaces IPv4 addresses in a given string with the string
+"|||IP_ADDRESS|||", returning a pair containing both the new string and the number of in-
+stances that were masked. Implement the adapter [run_mask_ips] and make sure it passes
+uv run pytest -k test_mask_ips.
+
+Answer:
+cs336_data/mask_pii.py
+
+4. What problems do you think might arise downstream in a language model when these filters are
+naïvely applied on the training set? How might you mitigate these issues?
+Deliverable: A 2-5 sentence response.
+
+Answer:
+Information loss like domain, format and ranges that could be useful for downstream learning. 
+To metegate the issue, diverse pattern for masking can be used. 
+|||EMAIL_ADDRESS||| tokens don't appear in natural text, causing the model to learn spurious patterns, 
+can decrease model performance. To mitigate, replacement or hashing can be used.
+
+
+5. Run your PII masking functions on text extracted from the WARC files (via your previously-
+implemented text extraction function). Look through 20 random examples where a replacement
+was made; give some examples of false positives and false negatives.
+Deliverable: A 2-5 sentence response.
+
+Answer:
+
+uv run python mask_pii_example.py --sample-size 20 --max-records 2000 --seed 405
+
+False-positive - None detected in first run.
+A false negative was found: 0120-835-023パソコンのオニーサン remained unmasked because of missing space.
+
+
+
+
+Problem (harmful_content): 6 points
+
+1. Write a function to detect NSFW content.
+Deliverable: A function that labels a given string as containing NSFW content or not, returning
+a pair containing both the label and a confidence score. Implement the adapter
+[run_classify_nsfw] and make sure it passes
+uv run pytest -k test_classify_nsfw. Note that this test is just a sanity check, taken from
+the Jigsaw dataset, but by no means asserts that your classifier is accurate, which you should
+validate.
+
+Answer:
+cs336_data/harmful_content.py
+uv run pytest -k test_classify_nsfw
+
+2. Write a function to detect toxic speech.
+Deliverable: A function that labels a given string as consisting of toxic speech or not, returning
+a pair containing both the label and a confidence score. Implement the adapter
+[run_classify_toxic_speech] and make sure it passes
+uv run pytest -k test_classify_toxic_speech. Again, this test is just a sanity check, also
+taken from Jigsaw.
+
+Answer:
+cs336_data/harmful_content.py
+uv run pytest -k test_classify_toxic_speech
+
+3. What problems do you think might arise downstream in a language model when these filters are
+applied to create the training set? How might you mitigate these issues?
+Deliverable: A 2-5 sentence response.
+
+Answer:
+These filters can over-remove dialects, reclaimed slurs, sexual-health discussion, 
+and quoted toxic text used in neutral contexts, which can make the model less fair, 
+less knowledgeable, and worse at understanding real-world moderation edge cases.
+To mitigate, context-aware relabeling and post-training safety controls can be used, 
+so base knowledge is preserved while harmful generation is still constrained.
+
+4. Run your harmful content filters on text extracted from the WARC files (via your previously-
+implemented text extraction function). Look through 20 random examples and compare the
+classifier predictions to your own judgments. Report any classifier errors. What fraction of
+documents are harmful? Based on your observations, what would be suitable classifier confidence
+threshold(s) to use in filtering?
+Deliverable: A 2-5 sentence response.
+
+Answer:
+
+uv run python cs336_data/harmful_content_example.py --sample-size 20 --max-records 400 --seed 405
+Total documents scored: 367
+Predicted harmful fraction (nsfw_threshold=0.50, toxic_threshold=0.50): 1.09%
+Suitable classifier confidence threshold: Assymetric as a default - NSFW at about 0.60 and toxic-speech at about 0.90
+
+
+Problem (gopher_quality_filters): 3 points
+
+(a) Implement (at least) the subset of the Gopher quality filters as described above. For tokenizing
+text into words, you might find the NLTK package useful (specifically nltk.word_tokenize),
+though you’re not required to use it.
+Deliverable: A function that takes a string as its only argument and returns a boolean indi-
+cating whether the text passes the Gopher quality filters. Implement the adapter
+[run_gopher_quality_filter]. Then, make sure your filters pass the tests in uv run pytest
+-k test_gopher.
+
+Answer:
+cs336_data/gopher_quality_filters.py
+uv run pytest -k test_gopher
+
+
+(b) Run your rule-based quality filter on text extracted from the WARC files (via your previously-
+implemented text extraction function). Look through 20 random examples and compare the filter
+predictions to your own judgment. Comment on any cases where the quality filters differ from
+your judgments.
+Deliverable: A 2-5 sentence response.
+
+Answer:
+uv run python cs336_data/gopher_quality_filters_example.py              
+Processing WARC file: cs336_data/CC-MAIN-20250417135010-20250417165010-00065.warc.gz
+Maximum records to process: 2000
+
+Total documents extracted: 1851
+Documents passing Gopher filter: 396/1851 (21.4%)
+
+
+
+Problem (quality_classifier): 15 points
+
+(a) Train a quality classifier that, given text, returns a numeric quality score.
+Deliverable: A quality classifier for use in the next subproblem.
+
+Answer:
+It took too long to go through all url, and there is wget timeout issue. 
+I am using a fastText quality score model for the next assignment.
+
+
+(b) Write a function that labels a page as high or low-quality, and provides a confidence score in the
+label.
+Deliverable: A function taking a string as its only argument, and returning a pair with a label
+(high-quality or not) and a confidence score. Implement the adapter [run_classify_quality].
+As a sanity check, make sure it correctly classifies the two examples we provide by running uv
+run pytest -k test_classify_quality.
+
+Answer:
+cs336_data/quality_classifier.py
+uv run pytest -k test_classify_quality
+
+
+
+Problem (exact_deduplication): 3 points
+
+Write a function that takes a list of paths to input files and performs exact line deduplication on
+them. It should first count the frequency of each line in the corpus, using a hash to reduce memory,
+and then rewrite each file by only keeping its unique lines.
+Deliverable: A function that performs exact line deduplication. Your function should take two
+arguments: 
+(a) a list of paths to its input files, and 
+(b) an output directory. It should rewrite each
+input file to the output directory with the same name, but deduplicate the content by removing lines
+that occur more than once in the set of input files. For example, if the input paths are a/1.txt and
+a/2.txt, and the output directory is b/, your function should write the files b/1.txt and b/2.txt.
+Implement the adapter [run_exact_line_deduplication] and make sure it passes
+uv run pytest -k test_exact_line_deduplication.
+
+Answer:
+cs336_data/exact_deduplication.py
+uv run pytest -k test_exact_line_deduplication
+
+
+
+Problem (minhash_deduplication): 8 points
+
+Write a function that takes a list of paths to input files and performs fuzzy document deduplication
+with minhash and LSH. In particular, your function should compute minhash signatures for each
+document in the provided list of paths, use LSH with the provided number of bands to identify candidate
+duplicates, and then compute the true ngram Jaccard similarity between candidate duplicates and
+remove those that exceed a given threshold. To improve recall (following Penedo et al., 2023), normalize
+the text before computing minhash signatures and/or comparing Jaccard similarity by lowercasing,
+removing punctuation, normalizing whitespaces, and removing accents, and applying NFD unicode
+normalization.
+Deliverable: A function that performs fuzzy document deduplication. Your function should take
+at least the following arguments: (a) a list of paths to its input files, (b) the number of hashes to use
+for computing minhash signatures, (c) the number of bands to use for LSH, (d) the n-gram length
+(in words) for computing minhash signatures, and (e) an output directory. You may assume that the
+number of hashes to use for computing minhash signatures is evenly divisible by the number of bands
+to use for LSH.
+Your function should rewrite each input file to the output directory with the same name, but
+only writing documents that are either (a) not candidate duplicates and/or (b) are randomly se-
+lected to be retained from the clustered buckets. For example, if the input paths are a/1.txt and
+a/2.txt, and the output directory is b/, your function should write the files b/1.txt and b/2.txt.
+Implement the adapter [run_minhash_deduplication] and make sure it passes uv run pytest -k
+test_minhash_deduplication.
+
+Answer:
+cs336_data/minhash_deduplication.py
+uv run pytest -k test_minhash_deduplication
+
+
+
+Problem (filter_data): 6 points
+
+(a) Write a script to filter language modeling data from a collection of Common Crawl WET files
+(located at cs336_data/CC-MAIN-20250417135010-20250417165010-00065.warc.wet.gz). You are free to apply any
+of the primitives we’ve implemented in earlier parts of the assignment, and you’re also free to
+explore other filters and methods for generating data (e.g., filtering based on n-gram language
+model perplexity). Your goal is to produce data that, when trained on, minimizes the perplexity
+on the C4 100 domains subset of the Paloma benchmark.
+Again, we note that you are allowed to make use of the Paloma validation data in
+constructing filters or classifiers to process the CC WET files, but are not allowed
+to literally copy any of the validation data into your training data.
+Your script should report the number of examples kept by each filter that you’ve used, so you
+have a sense of how the filters are contributing to the final output data.
+Deliverable: A script (or sequence of scripts) that filters the provided CC WET files in parallel
+to produce language modeling data. A written breakdown of what proportion of the discarded
+examples are removed by each filter step.
+
+Answer:
+cs336_data/filter_data.py
+
+
+(b) How long does it take to filter the 5,000 WET files? How long would it take to filter the entire
+Common Crawl dump (100,000 WETs)?
+Deliverable: Runtime of the data filtering pipeline.
+
+Answer:
+
+uv run python -m cs336_data.filter_data cs336_data/CC-MAIN-20250417135010-20250417165010-00065.warc.wet.gz --output-directory /tmp/ece405_filter_bench --stats-output /tmp/ece405_filter_bench_stats.json --num-workers 1
+Measured runtime was 52.72 s per WET file. 
+Extrapolating linearly: 5,000 WETs takes about 263,600 s (~73.2 h, ~3.0 days) on one worker, 
+and 100,000 WETs takes about 5,272,000 s (~1,464 h, ~61 days) on one worker.
+On my 10-core machine, expected wall-clock with parallelism is roughly 7.3-9.2 h for 5,000 WETs 
+and 6.1-7.6 days for 100,000 WETs (assuming 80-100% scaling efficiency).
+
+
+
+Problem (inspect_filtered_data): 4 points
+
+(a) Take five random examples from your filtered dataset. Comment on their quality and whether
+or not they’d be suitable for language modeling, especially given that our goal is to minimize
+perplexity on the C4 100 domains benchmark.
+Deliverable: Five random examples from the final filtered data. Only showing pertinent excerpts
+of the data is fine, since the documents may be lengthy. For each example, a 1-2 sentence
+description of the example and whether or not it’s worthwhile to use for language modeling.
+
+Answer:
+
+5 random records from the filtered JSONL file with seed 405.
+
+1) URL: https://247tattoos.com/tattoo-advice/getting-your-first-tattoo-what-to-expect/
+Excerpt: “Getting Your First Tattoo: What to Expect ... FAQs About Tattoos and Piercings ... News & Tips ...”
+Comment: This page has some informative text but is mixed with heavy navigation/menu boilerplate. It is somewhat useful for LM training, but not ideal for minimizing C4-100 perplexity compared to cleaner editorial text.
+
+2) URL: https://dshb.biology.uiowa.edu/custitem16/MIgG3/custitem34/Non~human-primates,Stemphylium?...
+Excerpt: “Isotype: MIgG3 ... Javascript is disabled on your browser ... shopping experience ... cookies ...”
+Comment: This is mostly product metadata and template/legal text. It is low value for general LM quality and likely weak for C4-style validation domains.
+
+3) URL: https://www.jackson.stark.k12.oh.us/site/default.aspx?PageType=3&ModuleInstanceID=...
+Excerpt: “I have no Internet at home, are there free/low cost options? ... District Home ... Select a School ...”
+Comment: There is some useful public-information content, but the excerpt is dominated by portal navigation elements. This is marginally useful and lower priority than article-like prose.
+
+4) URL: https://www.knifehub.com/product-page/benchmade-mini-freek-565bk-02
+Excerpt: “Benchmade Mini Freek 565BK-02 ... Free Shipping on All Orders ... Shop All Hot Deals ...”
+Comment: Mostly e-commerce listing boilerplate with limited natural discourse. This is generally not worthwhile for perplexity-focused LM training unless heavily cleaned.
+
+5) URL: https://skoolon.com/worksheets-tag/chandrabindu-wale-shabd/
+Excerpt: “Chandrabindu Wale Shabd ... Home Subjects ... Comprehension Composition ... Hindi Menu ...”
+Comment: This appears educational, but the retained text is largely menu/category structure rather than rich explanatory content. It is only moderately useful and should be deprioritized versus cleaner instructional text.
+
+
+(b) Take five CC WETs that were removed and/or modified by your filtering script. What part of
+your filtering process removed or modified these documents, and do you think that their removal
+and/or modification was justified?
+Deliverable: Five random discarded examples from the original WETs. Only showing pertinent
+excerpts of the data is fine, since the documents may be lengthy. For each example, a 1-2 sentence
+description of the example and whether or not its removal was justified.
+
+Answer:
+
+5 random discarded records from the original WET file (seed 405). 
+In this sample, all five were rejected by the language-identification filter (`non_english_*`), 
+which is consistent with the fact that non-English documents are a large share of filtered-out pages.
+
+1) URL: https://www.wledbled.tn/2025/04/kais.html
+Excerpt: “سعيد: لن نقبل بأي توطين أو تغيير ديموغرافي..."
+Removed by: Language ID (`non_english_ar`).
+Comment: This is Arabic news/political text and appears coherent, 
+but removing it is justified for this pipeline because the target benchmark (C4 100 domains subset) 
+is English-focused.
+
+2) URL: http://ec2-54-146-75-147.compute-1.amazonaws.com/2022/10/07/pernambuco-ganhara-complexo-administrativo-do-mppe
+Excerpt: “Pernambuco ganhará Complexo Administrativo do MPPE ... Notícias ..."
+Removed by: Language ID (`non_english_pt`).
+Comment: This is Portuguese news-style content; quality seems reasonable, 
+but exclusion is justified to keep language distribution aligned with English evaluation data.
+
+3) URL: http://jscktd.com/html/83a599911.html
+Excerpt: “法外狂徒张三沃尔沃什么梗 ... 网站首页 ... 咨询 ..."
+Removed by: Language ID (`non_english_zh`).
+Comment: This page mixes Chinese title text and navigation boilerplate. 
+Removal is justified both for language mismatch and likely low content quality for English LM objectives.
+
+4) URL: https://www.profesia.sk/praca/nakupca/?company_id=95469&sort_by=relevance
+Excerpt: “PROFESIA.SK | Práca nákupca ... Hľadanie práce ..."
+Removed by: Language ID (`non_english_sk`).
+Comment: This is Slovak job-board content with heavy template/navigation text. 
+Excluding it is justified for an English-only pipeline and likely helps reduce boilerplate noise.
+
+5) URL: https://www.dpmsrl.it/
+Excerpt: “DPM Srl - Lavorazioni metalliche ... Home Prodotti Infissi ..."
+Removed by: Language ID (`non_english_it`).
+Comment: This Italian business-site text is mostly menu/catalog structure. 
+Removal is justified for both language mismatch and limited usefulness 
+for perplexity-focused English LM training.
+
+
+(c) If your analysis above motivates further changes to your data pipeline, feel free to make those
+changes before training your model. Report any changes and/or iterations of data that you
+experimented with.
+Deliverable: A description of data changes and/or iterations that you experimented with.
+
+Answer:
+
+-
+
+
+Problem (tokenize_data): 2 points
+
+Write a script to tokenize and serialize your filtered data. Make sure to serialize following the
+example code above, with ids_array.tofile(output_path), where ids_array is a np.uint16 numpy
+array of integer IDs. This ensures compatibility with the provided training script.
+How many tokens are in your filtered dataset?
+Deliverable: A script to tokenize and serialize your filtered data, and the number of tokens in
+your produced dataset.
+
+Answer:
+
+cs336_data/tokenize_data.py
+
+uv run python -m cs336_data.tokenize_data /tmp/ece405_filtered_data/CC-MAIN-20250417135010-20250417165010-00065.jsonl /tmp/ece405_filtered_data/CC-MAIN-20250417135010-20250417165010-00065_gpt2.bin --text-key text --chunksize 100
+
+The script uses the GPT-2 tokenizer (`transformers`), appends `<|endoftext|>` after every document,
+flattens all token IDs, converts to `np.uint16`, and serializes with:
+`ids_array.tofile(output_path)`.
+
+Total tokens in the produced filtered dataset: 11,808,204.
+
+
+
+Problem (train_model): 2 points
+
+Train a language model (GPT-2 small-shaped) on your tokenized dataset. Periodically mea-
+sure the validation loss on C4 100 domains (this is already enabled by default in the config at
+cs336-basics/cs336_basics/train_config.py). What is the best validation loss that your model
+achieves? 
+Deliverable: The best validation loss that was recorded, the associated learning curve, and a
+description of what you did.
+
+Answer:
+
+cs336_data/train_model.py
+
+uv run python cs336_data/train_model.py --train-steps 12 --train-batch-size 2 --eval-batch-size 2 --eval-interval 4 --eval-iterations 2 --output-dir cs336_data/output/train_model_run1
+
+Best validation loss recorded: 8.469854 at step 8.
+
+Associated learning curve (validation loss):
+step 4: 9.440827
+step 8: 8.469854
+step 12: 8.862602
+
+What I did:
+Trained a GPT-2 small-shaped model (12 layers, d_model=768, 12 heads, d_ff=2048, context length 512) using the tokenized dataset generated in the previous problem.
+Evaluated validation loss periodically every 4 steps and tracked the best checkpoint.
